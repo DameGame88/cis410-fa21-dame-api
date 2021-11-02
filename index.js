@@ -1,7 +1,9 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const db = require("./dbConnectExec.js");
+const dameConfig = require("./config.js");
 const app = express();
 
 app.use(express.json());
@@ -19,6 +21,77 @@ app.get("/", (req, res) => {
 
 // app.post()
 // app.put()
+
+app.post("/customer/login", async (req, res) => {
+  // console.log("/customer/login called", req.body);
+
+  //1. Data validation
+  let email = req.body.email;
+  let password = req.body.password;
+
+  if (!email || !password) {
+    return res.status(400).send("Bad request");
+  }
+
+  // 2. Check that user exists in DB
+
+  let query = `SELECT *
+  FROM Customer
+  WHERE email = '${email}'`;
+  // THIS DID NOT POST CORRECTLY, DID NOT GET THE 500 ERROR IN POST MAN
+  let result;
+  try {
+    result = await db.executeQuery(query);
+  } catch (myError) {
+    console.log("error is  /customer/login", myError);
+    return res.status(500).send();
+  }
+
+  // console.log("result", result);
+
+  if (!result[0]) {
+    return res.status(401).send("Invalid user credentials");
+  }
+
+  // 3. check Password
+
+  let user = result[0];
+
+  if (!bcrypt.compareSync(password, user.password)) {
+    return res.status(401).send("Invalid user credentials");
+  }
+
+  // 4. generate token
+
+  let token = jwt.sign({ pk: user.CustomerPK }, dameConfig.JWT, {
+    expiresIn: "60 minutes",
+  });
+  console.log("token", token);
+  c;
+
+  // 5. Save token in DB and send response back
+
+  let setTokenQuery = `UPDATE Customer
+  SET Token = '${token}'
+  WHERE CustomerPK = '${user.CustomerPK}'`;
+
+  try {
+    await db.executeQuery(setTokenQuery);
+
+    res.status(200).send({
+      token: token,
+      user: {
+        NameFirst: user.NameFirst,
+        NameLast: user.NameLast,
+        Email: user.Email,
+        CustomerPK: user.CustomerPK,
+      },
+    });
+  } catch (myError) {
+    console.log("error in setting user token", myError);
+    res.status(500).send();
+  }
+});
 
 app.post("/Customer", async (req, res) => {
   // res.send("/Customer called");
