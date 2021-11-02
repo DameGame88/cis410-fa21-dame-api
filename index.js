@@ -134,7 +134,7 @@ WHERE Email = '${email}'`;
       res.status(201).send();
     })
     .catch((error) => {
-      console.log("error in POST /customer", err);
+      console.log("error in POST /customer", error);
       res.status(500).send();
     });
 });
