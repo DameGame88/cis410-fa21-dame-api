@@ -1,0 +1,4 @@
+{
+  "appService.defaultWebAppToDeploy": "/subscriptions/7c7ae540-bbde-47a4-bb34-41a64bc8ba4e/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/cis410-fa21-Dame-api",
+  "appService.deploySubpath": "."
+}
