@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const db = require("./dbConnectExec.js");
 const dameConfig = require("./config.js");
 const app = express();
+const auth = require("./middleware/authenticate");
 
 app.use(express.json());
 app.listen(5000, () => {
@@ -21,6 +22,38 @@ app.get("/", (req, res) => {
 
 // app.post()
 // app.put()
+
+app.post("/reviews", auth, async (req, res) => {
+  try {
+    let EJuiceFK = req.body.EJuiceFK;
+    let Summary = req.body.Summary;
+    let Rating = req.body.Rating;
+
+    if (!EJuiceFK || !Summary || !Rating || !Number.isInteger(Rating)) {
+      return res.status(400).send("bad request");
+    }
+
+    Summary = Summary.replace("'", "''");
+    // res.send("here is the response");
+    // console.log("summary", summary);
+    // console.log("here is the contact", req.customer);
+
+    let insertQuery = `INSERT  INTO Review(Summary,Rating,EJuiceFK,CustomerFK)
+    OUTPUT inserted.ReviewPK, inserted.Summary, inserted.Rating, inserted.EJuiceFK
+    VALUES ('${Summary}', '${Rating}', '${EJuiceFK}', ${req.customer.CustomerPK}) `;
+
+    let insertedReview = await db.executeQuery(insertQuery);
+    // console.log("inserted review", insertedReview);
+    res.status(201).send(insertedReview[0]);
+  } catch (err) {
+    console.log(" error in POST /Reviews", err);
+    res.status(500).send();
+  }
+});
+
+app.get("/customer/me", auth, (req, res) => {
+  res.send(req.customer);
+});
 
 app.post("/customer/login", async (req, res) => {
   // console.log("/customer/login called", req.body);
@@ -56,8 +89,9 @@ app.post("/customer/login", async (req, res) => {
   // 3. check Password
 
   let user = result[0];
+  //console.log("user", user);
 
-  if (!bcrypt.compareSync(password, user.password)) {
+  if (!bcrypt.compareSync(password, user.Password)) {
     return res.status(401).send("Invalid user credentials");
   }
 
@@ -67,7 +101,6 @@ app.post("/customer/login", async (req, res) => {
     expiresIn: "60 minutes",
   });
   console.log("token", token);
-  c;
 
   // 5. Save token in DB and send response back
 
@@ -99,6 +132,7 @@ app.post("/Customer", async (req, res) => {
   // console.log("request body", req.body);
 
   let nameFirst = req.body.nameFirst;
+  q;
   let nameLast = req.body.nameLast;
   let email = req.body.email;
   let age = req.body.age;
