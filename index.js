@@ -9,7 +9,7 @@ const app = express();
 const auth = require("./middleware/authenticate");
 
 app.use(express.json());
-
+app.use(cors());
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
@@ -26,6 +26,21 @@ app.get("/", (req, res) => {
 
 // app.post()
 // app.put()
+
+app.post("/customer/logout", auth, (req, res) => {
+  let query = `UPDATE Customer
+  SET token = NULL
+  WHERE CustomerPK = ${req.customer.CustomerPK}`;
+
+  db.executeQuery(query)
+    .then(() => {
+      res.status(200).send();
+    })
+    .catch((err) => {
+      console.log("error in POST /customer/logout", err);
+      res.status(500).send();
+    });
+});
 
 app.post("/reviews", auth, async (req, res) => {
   try {
