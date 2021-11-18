@@ -42,6 +42,22 @@ app.post("/customer/logout", auth, (req, res) => {
     });
 });
 
+app.get("/reviews/me", auth, async (req, res) => {
+  // 1. get CustomerPK
+  console.log("this is the customer", req.customer.CustomerPK);
+  let query = `SELECT *
+  FROM Review
+  WHERE CustomerPK = ${req.customer.CustomerPK}`;
+  // 2. Query the database for users records
+  db.executeQuery(query).then(() => {
+    res.status(200).send();
+  });
+  // 3. send users reviews back to them
+});
+
+// app.patch("/reviews/:pk", auth, async(req,res)=>{
+
+// }
 app.post("/reviews", auth, async (req, res) => {
   try {
     let EJuiceFK = req.body.EJuiceFK;
