@@ -47,11 +47,13 @@ app.get("/reviews/me", auth, async (req, res) => {
   console.log("this is the customer", req.customer.CustomerPK);
   let query = `SELECT *
   FROM Review
-  WHERE CustomerPK = ${req.customer.CustomerPK}`;
+  LEFT JOIN EJuice 
+  ON EJuice.EJuicePK= Review.EJuiceFK
+  WHERE CustomerFK = ${req.customer.CustomerPK}`;
   // 2. Query the database for users records
-  db.executeQuery(query).then(() => {
-    res.status(200).send();
-  });
+  let result = await db.executeQuery(query);
+  res.status(200).send(result);
+
   // 3. send users reviews back to them
 });
 
@@ -167,7 +169,7 @@ app.post("/Customer", async (req, res) => {
   // console.log("request body", req.body);
 
   let nameFirst = req.body.nameFirst;
-  q;
+
   let nameLast = req.body.nameLast;
   let email = req.body.email;
   let age = req.body.age;
